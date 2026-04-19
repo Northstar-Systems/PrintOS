@@ -41,10 +41,10 @@ export default function MoneyPage() {
 
       {/* KPI Grid */}
       <div className="grid grid-cols-2 gap-3">
-        <KpiCard title="Avg Cost/Print" value="$0.00" icon={DollarSign} iconColor="bg-amber/10 text-amber" />
-        <KpiCard title="Total Savings" value="$0.00" icon={TrendingUp} iconColor="bg-green/10 text-green" />
-        <KpiCard title="Products" value="0" icon={Package} iconColor="bg-purple/10 text-purple" />
-        <KpiCard title="Price Checks" value="0" icon={BarChart3} iconColor="bg-cyan/10 text-cyan" />
+        <KpiCard title="Avg Cost/Print" value="$0.00" icon={DollarSign} gradient="from-amber-500 to-orange-700" />
+        <KpiCard title="Total Savings" value="$0.00" icon={TrendingUp} gradient="from-emerald-500 to-green-700" />
+        <KpiCard title="Products" value="0" icon={Package} gradient="from-violet-500 to-purple-700" />
+        <KpiCard title="Price Checks" value="0" icon={BarChart3} gradient="from-cyan-500 to-teal-700" />
       </div>
 
       {/* Cost Breakdown */}

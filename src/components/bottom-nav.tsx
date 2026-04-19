@@ -2,11 +2,12 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Printer, DollarSign, Settings } from "lucide-react";
+import { Home, Printer, Wrench, DollarSign, Settings } from "lucide-react";
 
 const tabs = [
   { href: "/home", label: "Home", icon: Home },
   { href: "/print", label: "Print", icon: Printer },
+  { href: "/tools", label: "Tools", icon: Wrench },
   { href: "/money", label: "Money", icon: DollarSign },
   { href: "/settings", label: "Settings", icon: Settings },
 ] as const;
