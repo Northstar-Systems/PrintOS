@@ -1,113 +1,45 @@
 import { NextResponse } from "next/server";
+import { erpGet, erpPost, APP_CONFIG } from "@/lib/erpnext";
 
 export const dynamic = "force-dynamic";
 
-const ERPNEXT_URL = process.env.ERPNEXT_URL ?? "http://192.168.1.33:8080";
-const ERPNEXT_KEY = process.env.ERPNEXT_API_KEY ?? "9c0008faa7e73ed";
-const ERPNEXT_SECRET = process.env.ERPNEXT_API_SECRET ?? "f7b1857ef2b803f";
+interface ParsedItem { name: string; qty: number; unit_price: number; total: number; category: string; }
+interface PurchaseData { vendor: string; date: string; order_id?: string; items: ParsedItem[]; subtotal: number; tax: number; shipping: number; total: number; cost_center?: string; }
 
-const erpHeaders = {
-  Authorization: `token ${ERPNEXT_KEY}:${ERPNEXT_SECRET}`,
-  "Content-Type": "application/json",
-};
-
-async function erpGet(doctype: string, filters?: string) {
-  const url = `${ERPNEXT_URL}/api/resource/${doctype}${filters ? `?filters=${encodeURIComponent(filters)}` : ""}`;
-  const r = await fetch(url, { headers: erpHeaders });
-  if (!r.ok) return null;
-  return (await r.json()).data;
+function itemCodeFromName(name: string): string {
+  return name.replace(/[^a-zA-Z0-9\s-]/g, "").trim().substring(0, 40).replace(/\s+/g, "-").toUpperCase() || "ITEM";
 }
 
-async function erpPost(doctype: string, data: Record<string, unknown>) {
-  const r = await fetch(`${ERPNEXT_URL}/api/resource/${doctype}`, {
-    method: "POST",
-    headers: erpHeaders,
-    body: JSON.stringify(data),
-  });
-  if (!r.ok) {
-    const body = await r.json().catch(() => ({}));
-    throw new Error(body.exception || `ERPNext ${r.status}`);
-  }
-  return (await r.json()).data;
-}
-
-interface ParsedItem {
-  name: string;
-  qty: number;
-  unit_price: number;
-  total: number;
-  category: string;
-}
-
-interface PurchaseData {
-  vendor: string;
-  date: string;
-  order_id?: string;
-  items: ParsedItem[];
-  subtotal: number;
-  tax: number;
-  shipping: number;
-  total: number;
-}
-
-function itemCodeFromName(name: string, category: string): string {
-  // Generate a clean item code from the description
-  const clean = name
-    .replace(/[^a-zA-Z0-9\s-]/g, "")
-    .trim()
-    .substring(0, 40)
-    .replace(/\s+/g, "-")
-    .toUpperCase();
-  return clean || `${category.toUpperCase()}-ITEM`;
-}
-
-function detectCostCenter(category: string): string {
-  switch (category) {
-    case "filament": return "Materials - NSS";
-    case "hardware": return "Equipment - NSS";
-    default: return "Admin - NSS";
-  }
-}
-
-function detectItemGroup(category: string): string {
-  switch (category) {
-    case "filament": return "Filament";
-    case "hardware": return "Spare Parts";
-    default: return "All Item Groups";
-  }
+function detectItemGroup(cat: string): string {
+  return cat === "filament" ? "Filament" : cat === "hardware" ? "Spare Parts" : "All Item Groups";
 }
 
 export async function POST(request: Request) {
   try {
     const body: PurchaseData = await request.json();
+    const costCenter = body.cost_center || "General - NSS";
     const results: string[] = [];
 
-    // 1. Find or create Supplier
-    let supplier = await erpGet("Supplier", `[["supplier_name","=","${body.vendor}"]]`);
-    if (!supplier || supplier.length === 0) {
-      const created = await erpPost("Supplier", {
-        supplier_name: body.vendor,
-        supplier_type: "Company",
-        supplier_group: "Materials",
-      });
-      results.push(`Created supplier: ${created.name}`);
+    // Find or create supplier
+    const suppliers = await erpGet<Array<{ name: string }>>("Supplier", `[["supplier_name","=","${body.vendor}"]]`);
+    if (!suppliers || !Array.isArray(suppliers) || suppliers.length === 0) {
+      const c = await erpPost("Supplier", { supplier_name: body.vendor, supplier_type: "Company", supplier_group: "All Supplier Groups" });
+      results.push(`Created supplier: ${c.name}`);
     } else {
-      results.push(`Found supplier: ${supplier[0].name}`);
+      results.push(`Found supplier: ${suppliers[0].name}`);
     }
 
-    // 2. Find or create Items
+    // Find or create items
     const piItems = [];
     for (const item of body.items) {
-      const code = itemCodeFromName(item.name, item.category);
-      const existing = await erpGet("Item", `[["item_code","=","${code}"]]`);
-
-      if (!existing || existing.length === 0) {
-        const uom = item.category === "filament" ? "g" : "Nos";
+      const code = itemCodeFromName(item.name);
+      const existing = await erpGet<Array<{ name: string }>>("Item", `[["item_code","=","${code}"]]`);
+      if (!existing || !Array.isArray(existing) || existing.length === 0) {
         await erpPost("Item", {
           item_code: code,
-          item_name: item.name,
+          item_name: item.name.substring(0, 140),
           item_group: detectItemGroup(item.category),
-          stock_uom: uom,
+          stock_uom: item.category === "filament" ? "g" : "Nos",
           is_stock_item: 1,
           is_purchase_item: 1,
           standard_rate: item.unit_price,
@@ -117,33 +49,25 @@ export async function POST(request: Request) {
       } else {
         results.push(`Found item: ${code}`);
       }
-
-      piItems.push({
-        item_code: code,
-        qty: item.qty,
-        rate: item.unit_price,
-        cost_center: detectCostCenter(item.category),
-      });
+      piItems.push({ item_code: code, qty: item.qty, rate: item.unit_price, cost_center: costCenter });
     }
 
-    // 3. Create Purchase Invoice
+    // Create Purchase Invoice
+    const today = new Date().toISOString().split("T")[0];
     const pi = await erpPost("Purchase Invoice", {
       supplier: body.vendor,
-      company: "Northstar Systems LLC",
-      posting_date: body.date || new Date().toISOString().split("T")[0],
-      due_date: body.date || new Date().toISOString().split("T")[0],
-      remarks: `Auto-parsed from receipt. Order: ${body.order_id || "N/A"}`,
+      company: APP_CONFIG.company,
+      posting_date: today,
+      due_date: today,
+      cost_center: costCenter,
+      remarks: `Auto-parsed receipt. Order: ${body.order_id || "N/A"}. Original date: ${body.date || "unknown"}`,
       items: piItems,
     });
     results.push(`Created Purchase Invoice: ${pi.name}`);
+    results.push(`Cost Center: ${costCenter.replace(" - NSS", "")}`);
 
-    return NextResponse.json({
-      success: true,
-      purchase_invoice: pi.name,
-      results,
-    });
+    return NextResponse.json({ success: true, purchase_invoice: pi.name, results });
   } catch (error) {
-    const msg = error instanceof Error ? error.message : "Unknown error";
-    return NextResponse.json({ error: msg }, { status: 500 });
+    return NextResponse.json({ error: error instanceof Error ? error.message : "Unknown error" }, { status: 500 });
   }
 }

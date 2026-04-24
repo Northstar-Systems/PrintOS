@@ -5,6 +5,7 @@ import { PrinterStatus } from "@/components/printer-status";
 import { KpiCard } from "@/components/kpi-card";
 import { TempChart } from "@/components/temp-chart";
 import { StatusBadge } from "@/components/status-badge";
+import { ItemModal } from "@/components/item-modal";
 import { TimeRangeSelector, TimeRange } from "@/components/time-range-selector";
 import {
   Clock,
@@ -26,8 +27,15 @@ interface PrintJob {
   ended_at: string;
   status: string;
   job_name: string;
+  gcode_file: string;
+  filament_grams: number;
+  filament_type: string;
   layer_num: number;
   total_layers: number;
+  total_cost: number;
+  filament_cost: number;
+  estimated_seconds: number;
+  item_code: string | null;
 }
 
 function formatRelativeTime(date: string): string {
@@ -45,10 +53,14 @@ export default function HomePage() {
   const [range, setRange] = useState<TimeRange>("30D");
   const [kpis, setKpis] = useState<Kpis | null>(null);
   const [prints, setPrints] = useState<PrintJob[]>([]);
+  const [selectedItem, setSelectedItem] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch("/api/kpis").then((r) => r.json()).then(setKpis).catch(() => {});
-    fetch("/api/prints").then((r) => r.json()).then(setPrints).catch(() => {});
+    Promise.all([
+      fetch("/api/kpis").then((r) => r.ok ? r.json() : Promise.reject("KPI fetch failed")).then(setKpis),
+      fetch("/api/prints").then((r) => r.ok ? r.json() : Promise.reject("Prints fetch failed")).then(setPrints),
+    ]).catch((e) => setError(typeof e === "string" ? e : "Failed to load dashboard data"));
   }, []);
 
   return (
@@ -133,38 +145,51 @@ export default function HomePage() {
           </div>
         ) : (
           <div className="space-y-2">
-            {prints.slice(0, 5).map((p, i) => (
-              <div
-                key={i}
-                className={`flex items-center justify-between rounded-xl px-4 py-3 transition-colors ${
-                  p.status === "FAILED"
-                    ? "bg-red/5 border border-red/10"
-                    : "glass-raised"
-                }`}
-              >
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-bold truncate">
-                      {p.job_name || "Unknown"}
-                    </span>
-                    <StatusBadge status={p.status} />
-                  </div>
-                  <div className="mt-1 flex items-center gap-3 text-[11px] text-text-muted">
-                    <span className="flex items-center gap-1">
-                      <Layers className="h-3 w-3" />
-                      {p.layer_num}/{p.total_layers}
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Clock className="h-3 w-3" />
-                      {formatRelativeTime(p.ended_at)}
-                    </span>
+            {prints.slice(0, 5).map((p, i) => {
+              const itemCode = p.item_code;
+              return (
+                <div
+                  key={i}
+                  onClick={() => itemCode && setSelectedItem(itemCode)}
+                  className={`flex items-center justify-between rounded-xl px-4 py-3 transition-colors cursor-pointer active:scale-[0.98] ${
+                    p.status === "FAILED"
+                      ? "bg-red/5 border border-red/10"
+                      : "glass-raised hover:bg-surface-raised"
+                  }`}
+                >
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-bold truncate">
+                        {p.job_name || "Unknown"}
+                      </span>
+                      <StatusBadge status={p.status} />
+                    </div>
+                    <div className="mt-1 flex items-center gap-3 text-[11px] text-text-muted">
+                      {p.filament_grams > 0 && (
+                        <span>{p.filament_grams}g {p.filament_type || ""}</span>
+                      )}
+                      {p.total_cost > 0 && (
+                        <span className="text-green font-semibold">${Number(p.total_cost).toFixed(2)}</span>
+                      )}
+                      <span className="flex items-center gap-1">
+                        <Layers className="h-3 w-3" />
+                        {p.layer_num}/{p.total_layers}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Clock className="h-3 w-3" />
+                        {formatRelativeTime(p.ended_at)}
+                      </span>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>
+
+      {/* Item Detail Modal */}
+      <ItemModal itemCode={selectedItem} onClose={() => setSelectedItem(null)} />
     </div>
   );
 }

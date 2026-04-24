@@ -34,12 +34,21 @@ interface ParsedData {
 
 type Step = "upload" | "parsing" | "review" | "submitting" | "done" | "error";
 
+const COST_CENTERS = [
+  { value: "3D Printing - NSS", label: "3D Printing" },
+  { value: "LodestarOS - NSS", label: "LodestarOS" },
+  { value: "Slowburn - NSS", label: "Slowburn" },
+  { value: "Consulting - NSS", label: "Consulting" },
+  { value: "General - NSS", label: "General" },
+] as const;
+
 export default function AddPurchasePage() {
   const router = useRouter();
   const fileRef = useRef<HTMLInputElement>(null);
   const cameraRef = useRef<HTMLInputElement>(null);
   const [step, setStep] = useState<Step>("upload");
   const [data, setData] = useState<ParsedData | null>(null);
+  const [costCenter, setCostCenter] = useState("General - NSS");
   const [error, setError] = useState("");
   const [result, setResult] = useState<string[]>([]);
   const [preview, setPreview] = useState<string | null>(null);
@@ -87,7 +96,7 @@ export default function AddPurchasePage() {
       const resp = await fetch("/api/purchase/submit", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
+        body: JSON.stringify({ ...data, cost_center: costCenter }),
       });
       const json = await resp.json();
 
@@ -213,6 +222,27 @@ export default function AddPurchasePage() {
             <div className="mt-3 flex gap-4 text-xs text-text-muted">
               <span>Date: {data.date || "Unknown"}</span>
               {data.order_id && <span>Order: {data.order_id}</span>}
+            </div>
+          </div>
+
+          <div className="glass gradient-border rounded-2xl p-5">
+            <div className="text-[10px] font-bold uppercase tracking-widest text-text-muted mb-3">
+              Business Line
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {COST_CENTERS.map(({ value, label }) => (
+                <button
+                  key={value}
+                  onClick={() => setCostCenter(value)}
+                  className={`rounded-xl px-4 py-2 text-xs font-bold transition-all ${
+                    costCenter === value
+                      ? "bg-blue/20 text-blue shadow-sm shadow-blue/10 ring-1 ring-blue/30"
+                      : "glass-raised text-text-muted hover:text-text-secondary"
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
             </div>
           </div>
 
