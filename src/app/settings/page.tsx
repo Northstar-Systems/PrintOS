@@ -33,7 +33,7 @@ function ConfigInput({ label, configKey, config, onChange, suffix, type = "text"
           type={type}
           value={config[configKey] || ""}
           onChange={(e) => onChange(configKey, e.target.value)}
-          className="w-24 text-right text-sm font-semibold tabular-nums bg-transparent border-0 outline-none focus:ring-1 focus:ring-blue rounded px-1"
+          className="w-40 text-right text-sm font-semibold tabular-nums bg-transparent border-0 outline-none focus:ring-1 focus:ring-blue rounded px-1"
         />
         {suffix && <span className="text-xs text-text-muted">{suffix}</span>}
       </div>
@@ -129,7 +129,7 @@ export default function SettingsPage() {
                   step="0.01"
                   value={config.electricity_rate_kwh || ""}
                   onChange={(e) => updateConfig("electricity_rate_kwh", e.target.value)}
-                  className="w-16 text-right text-sm font-semibold tabular-nums bg-transparent border-0 outline-none focus:ring-1 focus:ring-blue rounded px-1"
+                  className="w-20 text-right text-sm font-semibold tabular-nums bg-transparent border-0 outline-none focus:ring-1 focus:ring-blue rounded px-1"
                 />
                 <span className="text-xs text-text-muted">/kWh</span>
               </div>
@@ -143,7 +143,7 @@ export default function SettingsPage() {
                   type="number"
                   value={config.printer_wattage || ""}
                   onChange={(e) => updateConfig("printer_wattage", e.target.value)}
-                  className="w-16 text-right text-sm font-semibold tabular-nums bg-transparent border-0 outline-none focus:ring-1 focus:ring-blue rounded px-1"
+                  className="w-20 text-right text-sm font-semibold tabular-nums bg-transparent border-0 outline-none focus:ring-1 focus:ring-blue rounded px-1"
                 />
                 <span className="text-xs text-text-muted">W</span>
               </div>
@@ -159,7 +159,7 @@ export default function SettingsPage() {
                   step="0.01"
                   value={config.labor_rate_hr || ""}
                   onChange={(e) => updateConfig("labor_rate_hr", e.target.value)}
-                  className="w-16 text-right text-sm font-semibold tabular-nums bg-transparent border-0 outline-none focus:ring-1 focus:ring-blue rounded px-1"
+                  className="w-20 text-right text-sm font-semibold tabular-nums bg-transparent border-0 outline-none focus:ring-1 focus:ring-blue rounded px-1"
                 />
                 <span className="text-xs text-text-muted">/hr</span>
               </div>
