@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { PrinterStatus } from "@/components/printer-status";
 import { KpiCard } from "@/components/kpi-card";
 import { TempChart } from "@/components/temp-chart";
@@ -24,6 +25,7 @@ interface Kpis {
 }
 
 interface PrintJob {
+  id: string;
   ended_at: string;
   status: string;
   job_name: string;
@@ -50,6 +52,7 @@ function formatRelativeTime(date: string): string {
 }
 
 export default function HomePage() {
+  const router = useRouter();
   const [range, setRange] = useState<TimeRange>("30D");
   const [kpis, setKpis] = useState<Kpis | null>(null);
   const [prints, setPrints] = useState<PrintJob[]>([]);
@@ -150,7 +153,7 @@ export default function HomePage() {
               return (
                 <div
                   key={i}
-                  onClick={() => itemCode && setSelectedItem(itemCode)}
+                  onClick={() => p.id ? router.push(`/print/${p.id}`) : itemCode && setSelectedItem(itemCode)}
                   className={`flex items-center justify-between rounded-xl px-4 py-3 transition-colors cursor-pointer active:scale-[0.98] ${
                     p.status === "FAILED"
                       ? "bg-red/5 border border-red/10"

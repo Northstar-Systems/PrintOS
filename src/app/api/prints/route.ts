@@ -6,7 +6,7 @@ export const dynamic = "force-dynamic";
 
 export async function GET() {
   const { rows } = await pool.query(`
-    SELECT COALESCE(pj.completed_at, pj.started_at) AS ended_at, pj.status,
+    SELECT pj.id, COALESCE(pj.completed_at, pj.started_at) AS ended_at, pj.status,
       COALESCE(pj.object_name, pj.subtask_name, pj.gcode_file) AS job_name,
       pj.gcode_file, pj.filament_grams, pj.filament_type,
       pj.total_layers AS layer_num, pj.total_layers, pj.total_cost,
