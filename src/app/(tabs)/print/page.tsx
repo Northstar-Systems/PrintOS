@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useTelemetry } from "@/lib/use-telemetry";
 import { StatusBadge } from "@/components/status-badge";
 import { TempChart } from "@/components/temp-chart";
-import { Clock, Layers, Thermometer, Fan, Gauge, Printer } from "lucide-react";
+import { Clock, Layers, Thermometer, Fan, Gauge, Printer, Package } from "lucide-react";
 
 interface PrintJob {
   ended_at: string;
@@ -77,6 +78,14 @@ export default function PrintPage() {
 
   return (
     <div className="space-y-4">
+      {/* Quick Actions */}
+      <div className="flex items-center justify-between">
+        <h2 className="text-xs font-bold uppercase tracking-widest text-text-muted">Printer</h2>
+        <Link href="/print/products" className="flex items-center gap-1.5 rounded-xl glass-raised px-3 py-1.5 text-[10px] font-bold text-blue transition-all hover:bg-blue/10">
+          <Package className="h-3 w-3" /> Product Catalog
+        </Link>
+      </div>
+
       {/* Live Printer Panel */}
       <div className="glass gradient-border rounded-2xl p-5">
         <div className="text-[10px] font-bold uppercase tracking-widest text-text-muted mb-4">
