@@ -80,7 +80,7 @@ export default function HomePage() {
       <PrinterStatus />
 
       {/* KPI Grid */}
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 gap-3 stagger-children">
         <KpiCard
           title="Total Prints"
           value={kpis?.total_prints?.toString() ?? "0"}

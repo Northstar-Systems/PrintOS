@@ -27,7 +27,7 @@ export function BottomNav() {
               className="relative flex flex-col items-center justify-center gap-0.5 px-4 py-1 min-w-[64px] transition-all"
             >
               {active && (
-                <div className="absolute -top-px left-1/2 -translate-x-1/2 h-0.5 w-6 rounded-full bg-gradient-to-r from-blue to-cyan" />
+                <div className="absolute -top-px left-1/2 -translate-x-1/2 h-0.5 w-6 rounded-full bg-gradient-to-r from-blue to-cyan animate-fade-in" />
               )}
               <div className={`p-1.5 rounded-lg transition-all ${
                 active ? "bg-blue/10" : ""

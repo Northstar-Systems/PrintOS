@@ -9,7 +9,7 @@ export default function TabsLayout({
   return (
     <>
       <Header />
-      <main className="flex-1 overflow-y-auto px-4 pt-4 pb-20">
+      <main className="flex-1 overflow-y-auto px-4 pt-4 pb-20 animate-fade-in-up">
         {children}
       </main>
       <BottomNav />

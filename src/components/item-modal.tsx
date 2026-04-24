@@ -48,7 +48,7 @@ export function ItemModal({ itemCode, onClose }: ItemModalProps) {
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative w-full max-w-md max-h-[85vh] overflow-y-auto rounded-t-3xl sm:rounded-3xl glass border border-white/10 p-5 space-y-4 animate-in slide-in-from-bottom">
+      <div className="relative w-full max-w-md max-h-[85vh] overflow-y-auto rounded-t-3xl sm:rounded-3xl glass border border-white/10 p-5 space-y-4 animate-slide-up">
         {/* Header */}
         <div className="flex items-start justify-between">
           <div className="flex-1 min-w-0">

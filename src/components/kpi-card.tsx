@@ -31,7 +31,7 @@ export function KpiCard({ title, value, trend, icon: Icon, gradient, loading }: 
   const bg = gradient ?? "from-slate-700 to-slate-800";
 
   return (
-    <div className={`relative overflow-hidden rounded-2xl bg-gradient-to-br ${bg} p-4 shadow-lg`}>
+    <div className={`relative overflow-hidden rounded-2xl bg-gradient-to-br ${bg} p-4 shadow-lg transition-transform duration-150 hover:scale-[1.02] active:scale-[0.98]`}>
       <div className="flex items-start justify-between">
         <div className="text-[10px] font-bold uppercase tracking-widest text-white/60">
           {title}
@@ -42,7 +42,7 @@ export function KpiCard({ title, value, trend, icon: Icon, gradient, loading }: 
           </div>
         )}
       </div>
-      <div className="mt-2 text-[28px] font-extrabold tabular-nums leading-none tracking-tight text-white">
+      <div className="mt-2 text-[28px] font-extrabold tabular-nums leading-none tracking-tight text-white animate-count-up">
         {loading ? (
           <div className="h-8 w-20 animate-pulse rounded-lg bg-white/10" />
         ) : (
